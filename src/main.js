@@ -66,10 +66,11 @@ modeSelect.value = "none";
 modeSelect.addEventListener("change", (event) => applyMode(event.target.value));
 
 const benchButton = document.querySelector("#bench");
-benchButton.addEventListener("click", async () => {
+
+async function startBenchmark() {
   benchButton.disabled = true;
   modeSelect.disabled = true;
-  await runBenchmark({
+  const result = await runBenchmark({
     setMode: (next) => {
       modeSelect.value = next;
       applyMode(next);
@@ -81,7 +82,19 @@ benchButton.addEventListener("click", async () => {
   });
   benchButton.disabled = false;
   modeSelect.disabled = false;
-});
+  return result;
+}
+
+benchButton.addEventListener("click", startBenchmark);
+
+// ?bench=1 — автопрогін одразу після завантаження (зручно для скриптів і CI).
+if (new URLSearchParams(window.location.search).has("bench")) {
+  window.addEventListener("load", () => {
+    startBenchmark().then(() => {
+      document.title = `BENCH DONE — ${document.title}`;
+    });
+  });
+}
 
 document.querySelector("#reset").addEventListener("click", () => {
   currentState = createShip();
